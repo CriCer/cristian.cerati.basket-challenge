@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Rim
   - Backboard
+  - BallTrigger
   layers:
   - Default
   - TransparentFX
