@@ -14,11 +14,10 @@ public class GameManager : MonoBehaviour
     }
 
     public float gameTime = 60;
+    public GameObject[] ballPositions;
 
     [SerializeField]
     TMP_Text startText = null;
-    //[SerializeField]
-    //slider
 
     float remainingTime;
     GameState gameState = GameState.Start;
