@@ -18,23 +18,21 @@ public class PlayerManager : MonoBehaviour
     float maxSwipeDistance = 4f;
     [SerializeField]
     float inputMultiplier = 500f;
+    
 
-    void Start()
+
+    public void NewBallPosition(Vector3 newPosition)
     {
-        if (uiManager != null && ball != null)
-        {
-            float t = Mathf.InverseLerp(minPower, maxPower, ball.GetPerfectShotRequiredPower());
-            uiManager.UpdatePerfectZone(t, error);
-            uiManager.UpdateBackboardZone(0.8f, error);
+        if (!ball) return;
 
-        }
-        
+        ball.NewPosition(newPosition);
+
+        if (!uiManager) return;
+
+        float t = Mathf.InverseLerp(minPower, maxPower, ball.GetPerfectShotRequiredPower());
+        uiManager.UpdatePerfectZone(t, error);
+        uiManager.UpdateBackboardZone(0.8f, error);
     }
-
-    //void Update()
-    //{
-        
-    //}
 
     protected virtual void OnEnable()
     {
@@ -72,6 +70,8 @@ public class PlayerManager : MonoBehaviour
 
         ball.Shoot(Mathf.Lerp(minPower, maxPower, remappedValue));
     }
+
+    
 
     
 }

@@ -5,27 +5,48 @@ using UnityEngine;
 public class BallHandler : MonoBehaviour
 {
     const string TriggerTag = "BallTrigger";
+    const string OutTag = "Out";
+    const string RimTag = "Rim";
+    const string BackboardTag = "Backboard";
 
+    public enum ShotResult
+    {
+        Perfect,
+        Backboard,
+        Normal,
+        Miss
+    }
 
+    public delegate void OnShotEnd(ShotResult outcome);
+    public event OnShotEnd onShotEnd;
 
     public float inputStrength;
     public float shootAngle = 55f;
 
     [SerializeField]
     GameObject ballTarget;
-
-    Rigidbody rb;
+    [SerializeField]
+    Rigidbody ballRb;
     float gravity = 9.81f;
+
+    Vector3 shootingPosition = Vector3.zero;
+    bool touchedRim = false;
+    bool touchedBackboard = false;
+    bool isShooting = false;
+    bool scored = false;
 
     private void Start()
     {
-        rb = GetComponent<Rigidbody>();
         gravity = Mathf.Abs(Physics.gravity.y);
     }
 
     public void Shoot(float power)
     {
-        rb.velocity = GetBallDirection() * power;
+        if (!ballRb) return;
+
+        ballRb.velocity = GetBallDirection() * power;
+        isShooting = true;
+        InputManager.disableInputs = true;
     }
 
     private Vector3 GetBallDirection()
@@ -68,22 +89,70 @@ public class BallHandler : MonoBehaviour
 
     public void NewPosition(Vector3 newPosition)
     {
-
+        shootingPosition = newPosition;
+        ResetPosition();
     }
 
-    public void ResetPosition()
+    public void ResetPosition(bool enableInputs = true)
     {
-        
+        if (!ballRb) return;
+
+        ballRb.velocity = Vector3.zero;
+        ballRb.angularVelocity = Vector3.zero;
+        transform.rotation = Quaternion.identity;
+        transform.position = shootingPosition;
+        touchedBackboard = false;
+        touchedRim = false;
+        scored = false;
+        isShooting = false;
+
+        if (enableInputs)
+            InputManager.disableInputs = false;
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.tag == TriggerTag)
         {
-            Debug.Log("Green");
+            scored = true;
+
+            if (touchedBackboard)
+            {
+                onShotEnd?.Invoke(ShotResult.Backboard);
+                return;
+            }
+
+            if (touchedRim)
+            {
+                onShotEnd?.Invoke(ShotResult.Normal);
+                return;
+            }
+
+            if (!touchedRim && !touchedBackboard)
+            {
+                onShotEnd?.Invoke(ShotResult.Perfect);
+            }
         }
     }
 
-    
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!scored && isShooting && collision.gameObject.tag == OutTag)
+        {
+            onShotEnd?.Invoke(ShotResult.Miss);
+        }
+
+        if (collision.gameObject.tag == RimTag)
+        {
+            touchedRim = true;
+        }
+
+        if (collision.gameObject.tag == BackboardTag)
+        {
+            touchedBackboard = true;
+        }
+    }
+
+
 
 }

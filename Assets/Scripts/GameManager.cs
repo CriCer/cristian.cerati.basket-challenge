@@ -1,8 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class GameManager : MonoBehaviour
 {
@@ -15,9 +18,20 @@ public class GameManager : MonoBehaviour
 
     public float gameTime = 60;
     public GameObject[] ballPositions;
+    public PlayerManager player;
+    public InputManager inputManager;
+    public UIManager uiManager;
 
     [SerializeField]
-    TMP_Text startText = null;
+    int perfectShotScore = 4;
+    [SerializeField]
+    int normalShotScore = 2;
+    [SerializeField]
+    int backboardShotScore = 3;
+    [SerializeField]
+    private float timeAfterShot = 0.5f;
+
+    int score = 0;
 
     float remainingTime;
     GameState gameState = GameState.Start;
@@ -25,6 +39,16 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         StartCoroutine(StartGameTimer());
+
+
+        if (!player) return;
+        if (!player.ball) return;
+
+        player.ball.onShotEnd += BallScore;
+
+        player.NewBallPosition(GetNewPosition());
+
+        InputManager.disableInputs = true;
     }
 
     public void Update()
@@ -38,31 +62,111 @@ public class GameManager : MonoBehaviour
             else
             {
                 remainingTime -= Time.deltaTime;
-                startText.text = remainingTime.ToString();
+                
+                if (!uiManager) return;
+                uiManager.UpdateTimeSlider(Mathf.InverseLerp(0, gameTime, remainingTime));
             }
         }
         
     }
 
-    public void EndGame()
+    void StartGame()
     {
-        gameState = GameState.Finished;
-        //remove inputs
-    }
-
-    public IEnumerator StartGameTimer()
-    {
-        startText.text = "3";
-        yield return new WaitForSeconds(1);
-        startText.text = "2";
-        yield return new WaitForSeconds(1);
-        startText.text = "1";
-        yield return new WaitForSeconds(1);
-        startText.text = "GO";
+        InputManager.disableInputs = false;
         remainingTime = gameTime;
         gameState = GameState.Playing;
+    }
+
+    void EndGame()
+    {
+        gameState = GameState.Finished;
+        InputManager.disableInputs = true;
+
+        if (!uiManager) return;
+        uiManager.ShowResultScreen(score);
+
+        if (!player) return;
+        if (!player.ball) return;
+        player.ball.ResetPosition(false);
+    }
+
+    void BallScore(BallHandler.ShotResult outcome)
+    {
+        if (!player) return;
+
+        string shotText = "";
+
+        switch (outcome)
+        {
+            case BallHandler.ShotResult.Miss:
+                if (!player.ball) return;
+                player.ball.ResetPosition();
+                shotText = "Miss!";
+                break;
+
+            case BallHandler.ShotResult.Perfect:
+                AddScore(perfectShotScore);
+                StartCoroutine(WaitAndSetNewPosition());
+                shotText = "Perfect shot! +" + perfectShotScore;
+                break;
+
+            case BallHandler.ShotResult.Normal:
+                AddScore(normalShotScore);
+                StartCoroutine(WaitAndSetNewPosition());
+                shotText = "Normal shot! +" + normalShotScore;
+                break;
+
+            case BallHandler.ShotResult.Backboard:
+                AddScore(backboardShotScore);
+                StartCoroutine(WaitAndSetNewPosition());
+                shotText = "Backboard shot! +" + backboardShotScore;
+                break;
+
+        }
+
+        if (!uiManager) return;
+
+        uiManager.DisplayInfoText(shotText);
+        uiManager.UpdatePowerSlider(0);
+    }
+
+    Vector3 GetNewPosition()
+    {
+        int i = Random.Range(0, ballPositions.Length);
+        return ballPositions[i].transform.position;
+    }
+
+    void AddScore(int newScore)
+    {
+        score += newScore;
+
+        if (!uiManager) return;
+        uiManager.UpdateScoreText(score);
+    }
+
+    #region Coroutines
+    IEnumerator StartGameTimer()
+    {
+        if (!uiManager) yield break;
+
+        uiManager.UpdateInfoText("3");
         yield return new WaitForSeconds(1);
-        startText.text = "";
+        uiManager.UpdateInfoText("2");
+        yield return new WaitForSeconds(1);
+        uiManager.UpdateInfoText("1");
+        yield return new WaitForSeconds(1);
+        uiManager.UpdateInfoText("GO");
+        StartGame();
+        yield return new WaitForSeconds(1);
+        uiManager.UpdateInfoText("");
         
     }
+
+    IEnumerator WaitAndSetNewPosition()
+    {
+        yield return new WaitForSeconds(timeAfterShot);
+        player.NewBallPosition(GetNewPosition());
+
+    }
+    #endregion
 }

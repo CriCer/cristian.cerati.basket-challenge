@@ -2,23 +2,27 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static System.Net.Mime.MediaTypeNames;
 
 
 public class UIManager : MonoBehaviour
 {
     [SerializeField]
-    public TMP_Text startText;
+    TMP_Text infoText;
     [SerializeField]
-    public GameObject rewardPanel;
+    GameObject resultPanel;
     [SerializeField]
-    public GameObject endPanel;
+    GameObject endPanel;
     [SerializeField]
     UnityEngine.UI.Slider powerSlider;
     [SerializeField]
     UnityEngine.UI.Slider timeRemainingSlider;
     [SerializeField]
     TMP_Text scoreText;
+    [SerializeField]
+    TMP_Text finalScoreText;
 
     [SerializeField]
     private RectTransform perfectZoneImage;
@@ -39,7 +43,7 @@ public class UIManager : MonoBehaviour
 
     public void UpdatePowerSlider(float value)
     {
-        if (powerSlider == null) return;
+        if (!powerSlider) return;
         
         powerSlider.value = value;
        
@@ -47,17 +51,64 @@ public class UIManager : MonoBehaviour
 
     public void UpdatePerfectZone(float value, float error)
     {
-        if (perfectZoneImage == null) return;
+        if (!perfectZoneImage) return;
 
         UpdateZone(perfectZoneImage, value, error);
     }
     
     public void UpdateBackboardZone(float value, float error)
     {
-        if (perfectZoneImage == null) return;
+        if (!backboardZoneImage) return;
 
         UpdateZone(backboardZoneImage, value, error);
 
+    }
+
+    public void UpdateTimeSlider(float value)
+    {
+        if (!timeRemainingSlider) return;
+        timeRemainingSlider.value = value;
+    }
+
+    public void UpdateInfoText(string text)
+    {
+        if (!infoText) return;
+        infoText.text = text;
+    }
+    
+    public void UpdateScoreText(int score)
+    {
+        if (!scoreText) return;
+        scoreText.text = score.ToString();
+    }
+
+    public void ShowResultScreen(int score)
+    {
+        if (!resultPanel) return;
+        resultPanel.SetActive(true);
+        if (!finalScoreText) return;
+        finalScoreText.text = "Final score: " + score.ToString();
+    }
+
+    public void ShowEndScreen()
+    {
+        if (!endPanel) return;
+        endPanel.SetActive(true);
+
+        if (!resultPanel) return;
+        resultPanel.SetActive(false);
+    }
+
+    public void DisplayInfoText(string text)
+    {
+        if (!infoText) return;
+        infoText.text = text;
+        StartCoroutine(ClearInfoTextAfterOneSecond());
+    }
+
+    public void LoadScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
     }
 
     void UpdateZone(RectTransform zone, float value, float error)
@@ -72,5 +123,11 @@ public class UIManager : MonoBehaviour
         zone.offsetMax = Vector2.zero;
     }
 
-    
+    IEnumerator ClearInfoTextAfterOneSecond()
+    {
+        yield return new WaitForSeconds(1f);
+        if (!infoText) yield break;
+        infoText.text = "";
+    }
+
 }

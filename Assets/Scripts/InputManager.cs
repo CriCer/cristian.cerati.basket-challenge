@@ -7,6 +7,8 @@ using UnityEngine.InputSystem.EnhancedTouch;
 using Finger = UnityEngine.InputSystem.EnhancedTouch.Finger;
 using EnhancedTouchSupport = UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport;
 using System.Collections;
+using Unity.VisualScripting;
+using UnityEngine.PlayerLoop;
 
 public class InputManager : MonoBehaviour
 {
@@ -19,7 +21,7 @@ public class InputManager : MonoBehaviour
     public delegate void OnSwipeUpdate(Vector2 startPosition, Vector2 currentPosition);
     public static event OnSwipeUpdate onSwipeUpdate;
 
-    public bool inputEnabled = true;
+    public static bool disableInputs = true;
 
     [SerializeField]
     float maxHoldTime = 1.5f;
@@ -45,15 +47,21 @@ public class InputManager : MonoBehaviour
         StartCoroutine(Wait());
     }
 
+
+    public static void SetDisableInputs(bool value)
+    {
+        disableInputs = value;
+    }
+
     IEnumerator Wait()
     {
         yield return new WaitForSeconds(3f);
-        inputEnabled = true;
+        disableInputs = false;
     }
 
     void Update()
     {
-        if (!inputEnabled) return;
+        if (disableInputs) return;
 
         #region MouseInput
         if (Input.GetMouseButtonDown(0))
@@ -88,7 +96,7 @@ public class InputManager : MonoBehaviour
 
     public void StartSwipe(Vector2 currentPosition)
     {
-        if (!inputEnabled) return;
+        if (disableInputs) return;
 
         // Prevent gesture if UI pressed
         uiEventList.Clear();
@@ -109,7 +117,7 @@ public class InputManager : MonoBehaviour
 
     public void EndSwipe(Vector2 currentPosition)
     {
-        if (!inputEnabled) return;
+        if (disableInputs) return;
 
         if (!pressStart)
             return;
