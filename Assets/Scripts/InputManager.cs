@@ -1,14 +1,9 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.EnhancedTouch;
 
 using Finger = UnityEngine.InputSystem.EnhancedTouch.Finger;
 using EnhancedTouchSupport = UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport;
-using System.Collections;
-using Unity.VisualScripting;
-using UnityEngine.PlayerLoop;
 
 public class InputManager : MonoBehaviour
 {

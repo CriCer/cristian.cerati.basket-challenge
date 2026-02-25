@@ -1,10 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using static System.Net.Mime.MediaTypeNames;
 
 
 public class UIManager : MonoBehaviour
@@ -28,18 +25,6 @@ public class UIManager : MonoBehaviour
     private RectTransform perfectZoneImage;
     [SerializeField]
     private RectTransform backboardZoneImage;
-
-    [SerializeField]
-    RectTransform powerSliderRect;
-
-    private void Awake()
-    {
-
-    }
-
-    private void Start()
-    {
-    }
 
     public void UpdatePowerSlider(float value)
     {
