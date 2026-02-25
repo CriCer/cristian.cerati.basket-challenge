@@ -42,23 +42,6 @@ public class InputManager : MonoBehaviour
         pointer = new PointerEventData(EventSystem.current);
     }
 
-    private void Start()
-    {
-        StartCoroutine(Wait());
-    }
-
-
-    public static void SetDisableInputs(bool value)
-    {
-        disableInputs = value;
-    }
-
-    IEnumerator Wait()
-    {
-        yield return new WaitForSeconds(3f);
-        disableInputs = false;
-    }
-
     void Update()
     {
         if (disableInputs) return;
