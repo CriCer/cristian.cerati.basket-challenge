@@ -46,7 +46,7 @@ public class BallHandler : MonoBehaviour
     {
         if (!ballRb || !ballTarget) return;
 
-        if (power == GetBackboardShotRequiredPower())
+        if (Mathf.Approximately(power, GetBackboardShotRequiredPower()))
         {
             Vector3 reflectedPoint = GetMirroredPosition(ballTarget.transform.position, backboard.transform.position, backboard.transform.right);
             ballRb.velocity = GetBallDirection(reflectedPoint, backboardShootAngle) * power;
@@ -85,6 +85,8 @@ public class BallHandler : MonoBehaviour
         ballRb.angularVelocity = Vector3.zero;
         transform.rotation = Quaternion.identity;
         transform.position = shootingPosition;
+        //ballRb.MovePosition(shootingPosition);
+        //ballRb.MoveRotation(Quaternion.identity);
         touchedBackboard = false;
         touchedRim = false;
         scored = false;
