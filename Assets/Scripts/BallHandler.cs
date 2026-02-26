@@ -19,10 +19,13 @@ public class BallHandler : MonoBehaviour
     public event OnShotEnd onShotEnd;
 
     public float inputStrength;
-    public float shootAngle = 55f;
+    public float normalShootAngle = 80f;
+    public float backboardShootAngle = 55f;
+
+    public GameObject ballTarget;
 
     [SerializeField]
-    GameObject ballTarget;
+    GameObject backboard;
     [SerializeField]
     Rigidbody ballRb;
     float gravity = 9.81f;
@@ -38,51 +41,34 @@ public class BallHandler : MonoBehaviour
         gravity = Mathf.Abs(Physics.gravity.y);
     }
 
+    #region Public methods
     public void Shoot(float power)
     {
-        if (!ballRb) return;
+        if (!ballRb || !ballTarget) return;
 
-        ballRb.velocity = GetBallDirection() * power;
+        if (power == GetBackboardShotRequiredPower())
+        {
+            Vector3 reflectedPoint = GetMirroredPosition(ballTarget.transform.position, backboard.transform.position, backboard.transform.right);
+            ballRb.velocity = GetBallDirection(reflectedPoint, backboardShootAngle) * power;
+        }
+        else
+        {
+            ballRb.velocity = GetBallDirection(ballTarget.transform.position, normalShootAngle) * power;
+        }
+
         isShooting = true;
         InputManager.disableInputs = true;
     }
 
-    private Vector3 GetBallDirection()
-    {
-        Vector3 flatBallPosition = transform.position;
-        flatBallPosition.y = 0;
-        Vector3 flatTargetPosition = ballTarget.transform.position;
-        flatTargetPosition.y = 0;
-
-        Vector3 flatDirection = (flatTargetPosition - flatBallPosition).normalized;
-
-        Quaternion tilt = Quaternion.AngleAxis(shootAngle, Vector3.Cross(flatDirection, Vector3.up));
-        Vector3 finalDir = tilt * flatDirection;
-
-
-        return finalDir;
-    }
-
     public float GetPerfectShotRequiredPower()
     {
-        Vector3 flatBallPosition = transform.position;
-        flatBallPosition.y = 0;
-        Vector3 flatTargetPosition = ballTarget.transform.position;
-        flatTargetPosition.y = 0;
+        return GetShotRequiredPower(ballTarget.transform.position, normalShootAngle);
+    }
 
-        float y = ballTarget.transform.position.y - transform.position.y;
-        float x = (flatTargetPosition - flatBallPosition).magnitude;
-
-        float angleRad = shootAngle * Mathf.Deg2Rad;
-
-        float v = Mathf.Sqrt((gravity * x * x) / (2f * Mathf.Pow(Mathf.Cos(angleRad), 2) * (x * Mathf.Tan(angleRad) - y)));
-
-        if (float.IsNaN(v))
-        {
-            return 1;
-        }
-
-        return v;
+    public float GetBackboardShotRequiredPower()
+    {
+        Vector3 reflectedPoint = GetMirroredPosition(ballTarget.transform.position, backboard.transform.position, backboard.transform.right);
+        return GetShotRequiredPower(reflectedPoint, backboardShootAngle);
     }
 
     public void NewPosition(Vector3 newPosition)
@@ -107,6 +93,56 @@ public class BallHandler : MonoBehaviour
         if (enableInputs)
             InputManager.disableInputs = false;
     }
+#endregion
+
+#region Private methods
+    Vector3 GetBallDirection(Vector3 target, float angle)
+    {
+        Vector3 flatBallPosition = transform.position;
+        flatBallPosition.y = 0;
+        Vector3 flatTargetPosition = target;
+        flatTargetPosition.y = 0;
+
+        Vector3 flatDirection = (flatTargetPosition - flatBallPosition).normalized;
+
+        Quaternion tilt = Quaternion.AngleAxis(angle, Vector3.Cross(flatDirection, Vector3.up));
+        Vector3 finalDir = tilt * flatDirection;
+
+
+        return finalDir;
+    }
+
+    float GetShotRequiredPower(Vector3 target, float angle)
+    {
+        Vector3 flatBallPosition = transform.position;
+        flatBallPosition.y = 0;
+        Vector3 flatTargetPosition = target;
+        flatTargetPosition.y = 0;
+
+        float y = target.y - transform.position.y;
+        float x = (flatTargetPosition - flatBallPosition).magnitude;
+
+        float angleRad = angle * Mathf.Deg2Rad;
+
+        float v = Mathf.Sqrt((gravity * x * x) / (2f * Mathf.Pow(Mathf.Cos(angleRad), 2) * (x * Mathf.Tan(angleRad) - y)));
+
+        if (float.IsNaN(v))
+        {
+            return 1;
+        }
+
+        return v;
+    }
+
+    Vector3 GetMirroredPosition(Vector3 target, Vector3 mirror, Vector3 mirrorAxis)
+    {
+        mirrorAxis = mirrorAxis.normalized;
+        Vector3 offset = target - mirror;
+        Vector3 projected = Vector3.Project(offset, mirrorAxis);
+        Vector3 mirrored = target - 2f * projected;
+        return mirrored;
+    }
+#endregion
 
     private void OnTriggerEnter(Collider other)
     {
@@ -149,8 +185,6 @@ public class BallHandler : MonoBehaviour
         {
             touchedBackboard = true;
         }
+
     }
-
-
-
 }

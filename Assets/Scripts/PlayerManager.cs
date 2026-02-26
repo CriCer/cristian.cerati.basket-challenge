@@ -26,9 +26,10 @@ public class PlayerManager : MonoBehaviour
 
         if (!uiManager) return;
 
-        float t = Mathf.InverseLerp(minPower, maxPower, ball.GetPerfectShotRequiredPower());
-        uiManager.UpdatePerfectZone(t, error);
-        uiManager.UpdateBackboardZone(0.8f, error);
+        float perfectT = Mathf.InverseLerp(minPower, maxPower, ball.GetPerfectShotRequiredPower());
+        uiManager.UpdatePerfectZone(perfectT, error);
+        float backboardT = Mathf.InverseLerp(minPower, maxPower, ball.GetBackboardShotRequiredPower());
+        uiManager.UpdateBackboardZone(backboardT, error);
     }
 
     protected virtual void OnEnable()
@@ -63,7 +64,8 @@ public class PlayerManager : MonoBehaviour
         float t = Mathf.InverseLerp(0f, maxSwipeDistance, distance);
 
         float perfectT = Mathf.InverseLerp(minPower, maxPower, ball.GetPerfectShotRequiredPower());
-        float remappedValue = Utilities.RemapValue(t, perfectT, 0.8f, error);
+        float backboardT = Mathf.InverseLerp(minPower, maxPower, ball.GetBackboardShotRequiredPower());
+        float remappedValue = Utilities.RemapValue(t, perfectT, backboardT, error);
 
         ball.Shoot(Mathf.Lerp(minPower, maxPower, remappedValue));
     }
