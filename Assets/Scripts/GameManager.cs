@@ -43,6 +43,8 @@ public class GameManager : MonoBehaviour
     [Tooltip("Percentage of backboard bonus spawning divided by 100 (0 is never, 1 is always)")]
     [Range(0, 1)]
     float bonusSpawnChance = 0.2f;
+    [SerializeField]
+    float timeBetweenBonusSpawnChance = 1f;
 
     int score = 0;
     int currentBackboardExtraPoints = 0;
@@ -100,7 +102,7 @@ public class GameManager : MonoBehaviour
             {
                 bonusSpawnTimer += Time.deltaTime;
 
-                if (bonusSpawnTimer >= 1f)
+                if (bonusSpawnTimer >= timeBetweenBonusSpawnChance)
                 {
                     bonusSpawnTimer = 0f;
                     TrySpawnBackboardBonus();
