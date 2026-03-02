@@ -48,7 +48,7 @@ public class BallHandler : MonoBehaviour
 
         if (Mathf.Approximately(power, GetBackboardShotRequiredPower()))
         {
-            Vector3 reflectedPoint = GetMirroredPosition(ballTarget.transform.position, backboard.transform.position, backboard.transform.right);
+            Vector3 reflectedPoint = GetMirroredPosition(ballTarget.transform.position, backboard.transform.position, backboard.transform.forward);
             ballRb.velocity = GetBallDirection(reflectedPoint, backboardShootAngle) * power;
         }
         else
@@ -67,7 +67,7 @@ public class BallHandler : MonoBehaviour
 
     public float GetBackboardShotRequiredPower()
     {
-        Vector3 reflectedPoint = GetMirroredPosition(ballTarget.transform.position, backboard.transform.position, backboard.transform.right);
+        Vector3 reflectedPoint = GetMirroredPosition(ballTarget.transform.position, backboard.transform.position, backboard.transform.forward);
         return GetShotRequiredPower(reflectedPoint, backboardShootAngle);
     }
 

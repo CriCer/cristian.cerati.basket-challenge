@@ -1,6 +1,14 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using Random = UnityEngine.Random;
+
+[System.Serializable]
+public struct BackboardBonus
+{
+    public int bonusPoints;
+    public int weight;
+}
 
 public class GameManager : MonoBehaviour
 {
@@ -24,12 +32,24 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     int backboardShotScore = 3;
     [SerializeField]
-    private float timeAfterShot = 0.5f;
+    float timeAfterShot = 0.5f;
+    [SerializeField]
+    TMP_Text backboardBonusText;
+    [SerializeField]
+    BackboardBonus[] backboardBonuses;
+    [SerializeField]
+    float backboardBonusTime = 5f;
+    [SerializeField]
+    [Tooltip("Percentage of backboard bonus spawning divided by 100 (0 is never, 1 is always)")]
+    [Range(0, 1)]
+    float bonusSpawnChance = 0.2f;
 
     int score = 0;
-
-    float remainingTime;
+    int currentBackboardExtraPoints = 0;
+    float backboardBonusTimer = 0.0f;
+    float remainingTime = 0.0f;
     GameState gameState = GameState.Start;
+    float bonusSpawnTimer;
 
     void Start()
     {
@@ -50,6 +70,7 @@ public class GameManager : MonoBehaviour
     {
         if (gameState == GameState.Playing)
         {
+            //Game timer
             if (remainingTime <= 0)
             {
                 EndGame();
@@ -60,6 +81,30 @@ public class GameManager : MonoBehaviour
                 
                 if (!uiManager) return;
                 uiManager.UpdateTimeSlider(Mathf.InverseLerp(0, gameTime, remainingTime));
+            }
+
+            //Backboard bonus timer
+            if (backboardBonusTimer > 0f)
+            {
+                backboardBonusTimer -= Time.deltaTime;
+
+                if (backboardBonusTimer <= 0f)
+                {
+                    currentBackboardExtraPoints = 0;
+
+                    if (!backboardBonusText) return;
+                    backboardBonusText.text = "";
+                }
+            }
+            else
+            {
+                bonusSpawnTimer += Time.deltaTime;
+
+                if (bonusSpawnTimer >= 1f)
+                {
+                    bonusSpawnTimer = 0f;
+                    TrySpawnBackboardBonus();
+                }
             }
         }
         
@@ -112,9 +157,9 @@ public class GameManager : MonoBehaviour
                 break;
 
             case BallHandler.ShotResult.Backboard:
-                AddScore(backboardShotScore);
+                AddScore(backboardShotScore + currentBackboardExtraPoints);
                 StartCoroutine(WaitAndSetNewPosition());
-                shotText = "Backboard shot! +" + backboardShotScore;
+                shotText = "Backboard shot! +" + (backboardShotScore + currentBackboardExtraPoints);
                 break;
 
         }
@@ -137,6 +182,43 @@ public class GameManager : MonoBehaviour
 
         if (!uiManager) return;
         uiManager.UpdateScoreText(score);
+    }
+
+    int GetRandomBackboardBonus()
+    {
+        int totalWeight = 0;
+
+        foreach (var bonus in backboardBonuses)
+            totalWeight += bonus.weight;
+
+        int randomValue = Random.Range(0, totalWeight);
+
+        int currentWeight = 0;
+
+        foreach (var bonus in backboardBonuses)
+        {
+            currentWeight += bonus.weight;
+
+            if (randomValue < currentWeight)
+                return bonus.bonusPoints;
+        }
+
+        return backboardBonuses[0].bonusPoints;
+    }
+
+    public void StartBackboardBonus()
+    {
+        currentBackboardExtraPoints = GetRandomBackboardBonus();
+        backboardBonusTimer = backboardBonusTime;
+
+        if (!backboardBonusText) return;
+        backboardBonusText.text = "+" + currentBackboardExtraPoints;
+    }
+
+    void TrySpawnBackboardBonus()
+    {
+        if (Random.value <= bonusSpawnChance)
+            StartBackboardBonus();
     }
 
     #region Coroutines
