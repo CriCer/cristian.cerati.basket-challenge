@@ -15,30 +15,60 @@ public class BallHandler : MonoBehaviour
         Miss
     }
 
-    public delegate void OnShotEnd(ShotResult outcome);
+    public delegate void OnShotEnd(ShotResult outcome, float multiplier = 1f);
     public event OnShotEnd onShotEnd;
 
-    public float inputStrength;
-    public float normalShootAngle = 80f;
-    public float backboardShootAngle = 55f;
+    [SerializeField]
+    UIManager uiManager;
+    [SerializeField]
+    float inputStrength;
+    [SerializeField]
+    float normalShootAngle = 80f;
+    [SerializeField]
+    float backboardShootAngle = 55f;
 
-    public GameObject ballTarget;
-
+    [SerializeField]
+    GameObject ballTarget;
     [SerializeField]
     GameObject backboard;
     [SerializeField]
     Rigidbody ballRb;
-    float gravity = 9.81f;
+    [SerializeField]
+    int fireballRequiredShots = 5;
+    [SerializeField]
+    float fireballTime = 5.0f;
+    [SerializeField]
+    float fireballMultiplier = 2.0f;
 
+    float gravity = 9.81f;
     Vector3 shootingPosition = Vector3.zero;
     bool touchedRim = false;
     bool touchedBackboard = false;
     bool isShooting = false;
     bool scored = false;
+    int shotsInARow = 0;
+    float fireballTimer = 0.0f;
+    float currentFireballMultiplier = 1f;
 
     private void Start()
     {
         gravity = Mathf.Abs(Physics.gravity.y);
+    }
+
+    private void Update()
+    {
+        if (fireballTimer <= 0.0f && currentFireballMultiplier > 1.0f)
+        {
+            ResetFireball();
+        }
+        else if (fireballTimer > 0.0f)
+        {
+            fireballTimer -= Time.deltaTime;
+            if (uiManager)
+            {
+                uiManager.UpdateFireballSlider(Mathf.InverseLerp(0, fireballTime, fireballTimer));
+            }
+        }
     }
 
     #region Public methods
@@ -152,22 +182,35 @@ public class BallHandler : MonoBehaviour
         {
             scored = true;
 
+            if (fireballTimer <= 0)
+            {
+                shotsInARow++;
+                if (uiManager)
+                {
+                    uiManager.UpdateFireballSlider(Mathf.InverseLerp(0, fireballRequiredShots, shotsInARow));
+                }
+
+            }
+
             if (touchedBackboard)
             {
-                onShotEnd?.Invoke(ShotResult.Backboard);
-                return;
+                onShotEnd?.Invoke(ShotResult.Backboard, currentFireballMultiplier);
+                
+            }
+            else if (touchedRim)
+            {
+                onShotEnd?.Invoke(ShotResult.Normal, currentFireballMultiplier);
+            }
+            else
+            {
+                onShotEnd?.Invoke(ShotResult.Perfect, currentFireballMultiplier);
             }
 
-            if (touchedRim)
+            if (shotsInARow >= fireballRequiredShots)
             {
-                onShotEnd?.Invoke(ShotResult.Normal);
-                return;
+                StartFireball();
             }
 
-            if (!touchedRim && !touchedBackboard)
-            {
-                onShotEnd?.Invoke(ShotResult.Perfect);
-            }
         }
     }
 
@@ -176,6 +219,7 @@ public class BallHandler : MonoBehaviour
         if (!scored && isShooting && collision.gameObject.tag == OutTag)
         {
             onShotEnd?.Invoke(ShotResult.Miss);
+            ResetFireball();
         }
 
         if (collision.gameObject.tag == RimTag)
@@ -188,5 +232,24 @@ public class BallHandler : MonoBehaviour
             touchedBackboard = true;
         }
 
+    }
+
+    void StartFireball()
+    {
+        fireballTimer = fireballTime;
+        currentFireballMultiplier = fireballMultiplier;
+        shotsInARow = 0;
+    }
+
+    void ResetFireball()
+    {
+        fireballTimer = 0.0f;
+        shotsInARow = 0;
+        currentFireballMultiplier = 1f;
+
+        if (uiManager)
+        {
+            uiManager.UpdateFireballSlider(0);
+        }
     }
 }

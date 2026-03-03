@@ -132,11 +132,12 @@ public class GameManager : MonoBehaviour
         player.ball.ResetPosition(false);
     }
 
-    void BallScore(BallHandler.ShotResult outcome)
+    void BallScore(BallHandler.ShotResult outcome, float multiplier)
     {
         if (!player) return;
 
         string shotText = "";
+        int score = 0;
 
         switch (outcome)
         {
@@ -147,21 +148,24 @@ public class GameManager : MonoBehaviour
                 break;
 
             case BallHandler.ShotResult.Perfect:
-                AddScore(perfectShotScore);
+                score = Mathf.FloorToInt(perfectShotScore * multiplier);
+                AddScore(score);
                 StartCoroutine(WaitAndSetNewPosition());
-                shotText = "Perfect shot! +" + perfectShotScore;
+                shotText = "Perfect shot! +" + score;
                 break;
 
             case BallHandler.ShotResult.Normal:
-                AddScore(normalShotScore);
+                score = Mathf.FloorToInt(normalShotScore * multiplier);
+                AddScore(score);
                 StartCoroutine(WaitAndSetNewPosition());
-                shotText = "Normal shot! +" + normalShotScore;
+                shotText = "Normal shot! +" + score;
                 break;
 
             case BallHandler.ShotResult.Backboard:
-                AddScore(backboardShotScore + currentBackboardExtraPoints);
+                score = Mathf.FloorToInt((backboardShotScore + currentBackboardExtraPoints) * multiplier);
+                AddScore(score);
                 StartCoroutine(WaitAndSetNewPosition());
-                shotText = "Backboard shot! +" + (backboardShotScore + currentBackboardExtraPoints);
+                shotText = "Backboard shot! +" + score;
                 break;
 
         }

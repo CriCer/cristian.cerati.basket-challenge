@@ -20,6 +20,8 @@ public class UIManager : MonoBehaviour
     TMP_Text scoreText;
     [SerializeField]
     TMP_Text finalScoreText;
+    [SerializeField]
+    UnityEngine.UI.Slider fireballSlider;
 
     [SerializeField]
     private RectTransform perfectZoneImage;
@@ -94,6 +96,14 @@ public class UIManager : MonoBehaviour
     public void LoadScene(string sceneName)
     {
         SceneManager.LoadScene(sceneName);
+    }
+
+    public void UpdateFireballSlider(float value)
+    {
+        if (!fireballSlider) return;
+
+        fireballSlider.value = value;
+
     }
 
     void UpdateZone(RectTransform zone, float value, float error)
