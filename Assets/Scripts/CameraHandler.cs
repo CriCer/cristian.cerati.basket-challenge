@@ -4,7 +4,7 @@ public class CameraHandler : MonoBehaviour
 {
     public float cameraBackOffset;
     public float cameraUpOffset;
-    public float cameraSpeed = 1.5f;
+    public float cameraSmoothingTime = 0.5f;
 
     [SerializeField]
     GameObject ball;
@@ -12,6 +12,9 @@ public class CameraHandler : MonoBehaviour
     GameObject backgroundObject;
     [SerializeField]
     GameObject lookAtObject;
+
+    Vector3 currentVelocity = Vector3.zero;
+
 
     private void Start()
     {
@@ -24,7 +27,7 @@ public class CameraHandler : MonoBehaviour
     {
         if (ball == null || backgroundObject == null) return;
 
-        transform.position = Vector3.Lerp(transform.position, GetCameraPosition(), cameraSpeed * Time.deltaTime);
+        transform.position = Vector3.SmoothDamp(transform.position, GetCameraPosition(), ref currentVelocity, cameraSmoothingTime);
 
         if (lookAtObject == null) return;
         
